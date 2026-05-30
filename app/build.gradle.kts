@@ -1,16 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.example.project"
+    namespace = "com.ezDrop.app"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.project"
+        applicationId = "com.ezDrop.app"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -49,6 +50,10 @@ dependencies {
     implementation(libs.places)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    implementation(libs.navigation.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

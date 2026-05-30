@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "project"
+rootProject.name = "ezDrop"
 include(":app")
  
