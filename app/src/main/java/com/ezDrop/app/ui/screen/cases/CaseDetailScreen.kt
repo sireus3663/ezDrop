@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -82,7 +83,7 @@ fun CaseDetailScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "${data.caseInfo.price} coins \u00B7 Level ${data.caseInfo.requiredLevel}",
+                    text = "${data.caseInfo.price} $ \u00B7 Level ${data.caseInfo.requiredLevel}",
                     color = Color(0xFF3EC6FF),
                     fontSize = 14.sp
                 )
@@ -114,13 +115,14 @@ fun CaseDetailScreen(
             onClick = { /* TODO */ },
             modifier = Modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(16.dp)
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3EC6FF))
         ) {
             Text(
-                text = "Open Case (${data.caseInfo.price} coins)",
+                text = "Open Case (${data.caseInfo.price} $)",
                 color = Color(0xFF061733),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp

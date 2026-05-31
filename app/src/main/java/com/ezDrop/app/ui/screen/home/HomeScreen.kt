@@ -1,16 +1,20 @@
 package com.ezDrop.app.ui.screen.home
 
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
@@ -28,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,13 +46,18 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezDrop.app.ui.screen.cases.CasesScreen
 import com.ezDrop.app.ui.screen.inventory.InventoryScreen
 import com.ezDrop.app.ui.screen.profile.ProfileScreen
+import com.ezDrop.app.ui.screen.profile.ProfileTopBar
 import com.ezDrop.app.viewmodel.MainViewModel
+import com.ezDrop.app.viewmodel.ProfileViewModel
 
 @Composable
 fun HomeScreen(
@@ -57,13 +67,29 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var selected by remember { mutableStateOf(0) }
+    val profileViewModel: ProfileViewModel = viewModel()
+    val user = state.user ?: return
+    val profileState by profileViewModel.state.collectAsState()
+    val avatarUri = user.avatarUri ?: profileState.user?.avatarUri
+
+    LaunchedEffect(profileState.avatarRefresh) {
+        viewModel.refreshUser()
+    }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp),
         topBar = {
+            if (selected == 0) {
+                ProfileTopBar(
+                    onLogout = onLogout,
+                    onSettings = { profileViewModel.startEditing() }
+                )
+            } else {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFF061733))
+                    .padding(vertical = 10.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -104,7 +130,7 @@ fun HomeScreen(
                             fontSize = 11.sp
                         )
                         Text(
-                            text = "${state.balance} P",
+                            text = "${state.balance} $",
                             color = Color.White,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Black
@@ -117,7 +143,7 @@ fun HomeScreen(
                         .requiredWidth(600.dp)
                         .height(100.dp)
                         .align(Alignment.TopCenter)
-                        .offset(y = (-45).dp)
+                        .offset(y = (-50).dp)
                         .rotate(-14f)
                         .background(Color(0xFF132748))
                 ) {
@@ -125,18 +151,38 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .offset(x = (-100).dp, y = (-10).dp)
+                            .offset(x = (-130).dp, y = (-10).dp)
                             .rotate(14f)
                     ) {
-                        Image(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Avatar",
+                        Box(
                             modifier = Modifier
                                 .size(45.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.2f)),
-                            colorFilter = ColorFilter.tint(Color.White)
-                        )
+                                .background(Color(0xFF0D2147))
+                                .border(2.dp, Color(0xFF3EC6FF), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val topAvatarBitmap = remember(avatarUri, profileState.avatarRefresh) {
+                                avatarUri?.let { BitmapFactory.decodeFile(it) }
+                            }
+                            if (topAvatarBitmap != null) {
+                                Image(
+                                    bitmap = topAvatarBitmap.asImageBitmap(),
+                                    contentDescription = "Avatar",
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text(
+                                    text = user.nickname.firstOrNull()?.uppercase() ?: "U",
+                                    color = Color(0xFF3EC6FF),
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.width(10.dp))
 
@@ -156,18 +202,20 @@ fun HomeScreen(
                     }
                 }
             }
+            }
         },
         bottomBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
                     .background(Color(0xFF040B16))
+                    .navigationBarsPadding()
+                    .height(60.dp)
                     .clip(RoundedCornerShape(20.dp))
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(30.dp)
                         .align(Alignment.Center)
                         .clipToBounds()
                 ) {
@@ -223,7 +271,7 @@ fun HomeScreen(
             contentAlignment = Alignment.TopCenter
         ) {
             when (selected) {
-                0 -> ProfileScreen(onLogout = onLogout)
+                0 -> ProfileScreen(profileViewModel = profileViewModel)
                 1 -> CasesScreen(onNavigateToCase = onNavigateToCase)
                 2 -> InventoryScreen()
             }

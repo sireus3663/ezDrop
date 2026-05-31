@@ -34,4 +34,10 @@ interface UserDao {
 
     @Query("UPDATE users SET level = :level WHERE id = :userId")
     suspend fun updateLevel(userId: Long, level: Int): Int
+
+    @Query("UPDATE users SET nickname = :nickname WHERE id = :userId")
+    suspend fun updateNickname(userId: Long, nickname: String): Int
+
+    @Query("UPDATE users SET avatarUri = :uri WHERE id = :userId")
+    suspend fun updateAvatarUri(userId: Long, uri: String?): Int
 }

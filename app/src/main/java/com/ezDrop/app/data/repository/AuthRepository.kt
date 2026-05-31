@@ -44,4 +44,12 @@ class AuthRepository(private val userDao: UserDao) {
     suspend fun getUser(id: Long): UserEntity? {
         return userDao.getById(id)
     }
+
+    suspend fun updateNickname(userId: Long, nickname: String): Boolean {
+        return userDao.updateNickname(userId, nickname) > 0
+    }
+
+    suspend fun updateAvatarUri(userId: Long, uri: String?): Boolean {
+        return userDao.updateAvatarUri(userId, uri) > 0
+    }
 }

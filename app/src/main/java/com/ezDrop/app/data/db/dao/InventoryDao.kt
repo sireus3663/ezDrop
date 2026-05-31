@@ -22,4 +22,11 @@ interface InventoryDao {
 
     @Query("DELETE FROM user_inventory WHERE id = :id")
     suspend fun delete(id: Long): Int
+
+    @Query("""
+        SELECT COALESCE(SUM(items.price), 0) FROM items
+        INNER JOIN user_inventory ON items.id = user_inventory.itemId
+        WHERE user_inventory.userId = :userId
+    """)
+    suspend fun getInventoryValue(userId: Long): Int
 }

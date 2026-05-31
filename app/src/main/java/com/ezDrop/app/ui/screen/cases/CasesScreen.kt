@@ -95,7 +95,7 @@ private fun CaseCard(case: CaseEntity, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${case.price} coins",
+                    text = "${case.price} $",
                     color = Color(0xFF3EC6FF),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium

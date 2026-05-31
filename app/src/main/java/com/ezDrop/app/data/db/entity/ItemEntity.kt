@@ -11,5 +11,6 @@ data class ItemEntity(
     val rarity: String,
     val quality: String,
     val category: String,
-    val imageRes: String
+    val imageRes: String,
+    val price: Int = 0
 )
