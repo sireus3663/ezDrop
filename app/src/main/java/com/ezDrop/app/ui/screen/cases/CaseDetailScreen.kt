@@ -1,5 +1,6 @@
 package com.ezDrop.app.ui.screen.cases
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,32 +22,55 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezDrop.app.data.db.dao.CaseItemWithDetails
+import com.ezDrop.app.ui.util.rememberDrawablePainter
+import com.ezDrop.app.ui.util.rememberNullablePainter
 import com.ezDrop.app.viewmodel.CaseDetail
 import com.ezDrop.app.viewmodel.CaseViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CaseDetailScreen(
     caseId: Long,
     onBack: () -> Unit,
+    onBalanceChanged: () -> Unit,
     caseViewModel: CaseViewModel = viewModel()
 ) {
     val detail by caseViewModel.detail.collectAsState()
+    val openingResult by caseViewModel.openingResult.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(caseId) {
         caseViewModel.loadCaseDetail(caseId)
+    }
+
+    LaunchedEffect(openingResult) {
+        if (openingResult?.isSuccess == true) {
+            onBalanceChanged()
+        } else if (openingResult?.error != null) {
+            snackbarHostState.showSnackbar(openingResult!!.error!!)
+        }
     }
 
     val data = detail ?: run {
@@ -61,71 +85,195 @@ fun CaseDetailScreen(
         return
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF061733))
-    ) {
-        Box(
+    val wonItem = openingResult?.wonItem
+    var showResult by remember { mutableStateOf(false) }
+
+    LaunchedEffect(wonItem) {
+        if (wonItem != null) {
+            showResult = true
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color(0xFF061733)
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF0D2147))
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(Color(0xFF061733))
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("📦", fontSize = 64.sp)
-                Spacer(modifier = Modifier.height(12.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF0D2147))
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(
+                        painter = rememberDrawablePainter(data.caseInfo.imageRes),
+                        contentDescription = data.caseInfo.name,
+                        modifier = Modifier.size(72.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = data.caseInfo.name,
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "${data.caseInfo.price} $ \u00B7 Level ${data.caseInfo.requiredLevel}",
+                        color = Color(0xFF3EC6FF),
+                        fontSize = 14.sp
+                    )
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    Text(
+                        text = "Possible Drops",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+
+                items(data.items) { item ->
+                    ItemDropCard(item = item, totalWeight = data.totalWeight)
+                }
+            }
+
+            Button(
+                onClick = { caseViewModel.openCase() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(16.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3EC6FF))
+            ) {
                 Text(
-                    text = data.caseInfo.name,
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "${data.caseInfo.price} $ \u00B7 Level ${data.caseInfo.requiredLevel}",
-                    color = Color(0xFF3EC6FF),
-                    fontSize = 14.sp
+                    text = "Open Case (${data.caseInfo.price} $)",
+                    color = Color(0xFF061733),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
                 )
             }
         }
+    }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Possible Drops",
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    if (showResult && wonItem != null) {
+        ResultSheet(
+            item = wonItem,
+            onDismiss = {
+                showResult = false
+                caseViewModel.resetOpeningResult()
+            }
         )
+    }
+}
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(data.items) { item ->
-                ItemDropCard(item = item, totalWeight = data.totalWeight)
-            }
-        }
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ResultSheet(
+    item: CaseItemWithDetails,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF0D2147),
+        contentColor = Color.White
+    ) {
+        WonItemCard(item = item)
         Button(
-            onClick = { /* TODO */ },
+            onClick = onDismiss,
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(16.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3EC6FF))
         ) {
             Text(
-                text = "Open Case (${data.caseInfo.price} $)",
+                text = "Close",
                 color = Color(0xFF061733),
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+private fun WonItemCard(item: CaseItemWithDetails) {
+    val color = rarityColor(item.rarity)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.15f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "YOU WON!",
+                color = color,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                letterSpacing = 3.sp
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            val itemPainter = rememberNullablePainter(item.imageRes)
+            if (itemPainter != null) {
+                Image(
+                    painter = itemPainter,
+                    contentDescription = item.name,
+                    modifier = Modifier
+                        .size(72.dp)
+                        .background(color.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .background(color.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = item.name.take(2),
+                        color = color,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = item.name,
+                color = color,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "${item.quality} \u00B7 ${item.category}",
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 13.sp
             )
         }
     }
@@ -151,17 +299,29 @@ private fun ItemDropCard(item: CaseItemWithDetails, totalWeight: Int) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(rarityColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = item.name.take(2),
-                    color = rarityColor,
-                    fontWeight = FontWeight.Bold
+            val itemPainter = rememberNullablePainter(item.imageRes)
+            if (itemPainter != null) {
+                Image(
+                    painter = itemPainter,
+                    contentDescription = item.name,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(rarityColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Fit
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(rarityColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = item.name.take(2),
+                        color = rarityColor,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(12.dp))

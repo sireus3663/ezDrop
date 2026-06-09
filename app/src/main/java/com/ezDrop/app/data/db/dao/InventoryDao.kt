@@ -7,6 +7,17 @@ import androidx.room.Query
 import com.ezDrop.app.data.db.entity.InventoryEntity
 import com.ezDrop.app.data.db.entity.ItemEntity
 
+data class InventoryItemEntry(
+    val inventoryId: Long,
+    val itemId: Long,
+    val name: String,
+    val rarity: String,
+    val quality: String,
+    val category: String,
+    val imageRes: String,
+    val price: Int
+)
+
 @Dao
 interface InventoryDao {
 
@@ -29,4 +40,13 @@ interface InventoryDao {
         WHERE user_inventory.userId = :userId
     """)
     suspend fun getInventoryValue(userId: Long): Int
+
+    @Query("""
+        SELECT ui.id AS inventoryId, i.id AS itemId, i.name, i.rarity, i.quality,
+               i.category, i.imageRes, i.price
+        FROM user_inventory ui
+        INNER JOIN items i ON ui.itemId = i.id
+        WHERE ui.userId = :userId
+    """)
+    suspend fun getUserInventoryEntries(userId: Long): List<InventoryItemEntry>
 }

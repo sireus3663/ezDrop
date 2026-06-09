@@ -41,7 +41,7 @@ object SeedData {
     private val caseDefs = listOf(
         CaseDef(
             name = "Starter Case",
-            imageRes = "starter_case",
+            imageRes = "img",
             price = 100,
             requiredLevel = 1,
             slots = listOf(
@@ -52,7 +52,7 @@ object SeedData {
         ),
         CaseDef(
             name = "Premium Case",
-            imageRes = "premium_case",
+            imageRes = "img",
             price = 500,
             requiredLevel = 5,
             slots = listOf(
@@ -63,7 +63,7 @@ object SeedData {
         ),
         CaseDef(
             name = "Legendary Vault",
-            imageRes = "legendary_vault",
+            imageRes = "img",
             price = 1500,
             requiredLevel = 10,
             slots = listOf(

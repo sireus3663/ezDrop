@@ -18,7 +18,9 @@ object Routes {
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val HOME = "home"
-    const val CASE_DETAIL = "case/{caseId}"
+    const val CASE_DETAIL = "case_detail/{caseId}"
+
+    fun caseDetail(caseId: Long) = "case_detail/$caseId"
 }
 
 @Composable
@@ -26,6 +28,8 @@ fun NavGraph(
     navController: NavHostController,
     startDestination: String
 ) {
+    val mainViewModel: MainViewModel = viewModel()
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -59,7 +63,6 @@ fun NavGraph(
             )
         }
         composable(Routes.HOME) {
-            val mainViewModel: MainViewModel = viewModel()
             HomeScreen(
                 viewModel = mainViewModel,
                 onLogout = {
@@ -69,11 +72,10 @@ fun NavGraph(
                     }
                 },
                 onNavigateToCase = { caseId ->
-                    navController.navigate("case/$caseId")
+                    navController.navigate(Routes.caseDetail(caseId))
                 }
             )
         }
-
         composable(
             route = Routes.CASE_DETAIL,
             arguments = listOf(navArgument("caseId") { type = NavType.LongType })
@@ -81,7 +83,8 @@ fun NavGraph(
             val caseId = backStackEntry.arguments?.getLong("caseId") ?: return@composable
             CaseDetailScreen(
                 caseId = caseId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onBalanceChanged = { mainViewModel.refreshUser() }
             )
         }
     }

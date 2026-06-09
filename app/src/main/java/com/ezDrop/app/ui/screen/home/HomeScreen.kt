@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
@@ -56,6 +55,7 @@ import com.ezDrop.app.ui.screen.cases.CasesScreen
 import com.ezDrop.app.ui.screen.inventory.InventoryScreen
 import com.ezDrop.app.ui.screen.profile.ProfileScreen
 import com.ezDrop.app.ui.screen.profile.ProfileTopBar
+import com.ezDrop.app.viewmodel.InventoryViewModel
 import com.ezDrop.app.viewmodel.MainViewModel
 import com.ezDrop.app.viewmodel.ProfileViewModel
 
@@ -71,6 +71,7 @@ fun HomeScreen(
     val user = state.user ?: return
     val profileState by profileViewModel.state.collectAsState()
     val avatarUri = user.avatarUri ?: profileState.user?.avatarUri
+    val inventoryViewModel: InventoryViewModel = viewModel()
 
     LaunchedEffect(profileState.avatarRefresh) {
         viewModel.refreshUser()
@@ -272,8 +273,13 @@ fun HomeScreen(
         ) {
             when (selected) {
                 0 -> ProfileScreen(profileViewModel = profileViewModel)
-                1 -> CasesScreen(onNavigateToCase = onNavigateToCase)
-                2 -> InventoryScreen()
+                1 -> CasesScreen(
+                    onNavigateToCase = onNavigateToCase
+                )
+                2 -> InventoryScreen(
+                    onBalanceChanged = { viewModel.refreshUser() },
+                    inventoryViewModel = inventoryViewModel
+                )
             }
         }
     }

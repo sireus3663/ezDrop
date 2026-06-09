@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
 
 @Database(
     entities = [UserEntity::class, ItemEntity::class, InventoryEntity::class, CaseEntity::class, CaseItemEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -40,4 +40,7 @@ interface UserDao {
 
     @Query("UPDATE users SET avatarUri = :uri WHERE id = :userId")
     suspend fun updateAvatarUri(userId: Long, uri: String?): Int
+
+    @Query("UPDATE users SET netWorth = :netWorth WHERE id = :userId")
+    suspend fun updateNetWorth(userId: Long, netWorth: Int): Int
 }

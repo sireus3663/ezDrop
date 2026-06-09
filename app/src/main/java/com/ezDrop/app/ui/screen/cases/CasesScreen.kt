@@ -25,11 +25,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezDrop.app.data.db.entity.CaseEntity
+import com.ezDrop.app.ui.util.rememberDrawablePainter
 import com.ezDrop.app.viewmodel.CaseViewModel
 
 @Composable
@@ -81,7 +84,12 @@ private fun CaseCard(case: CaseEntity, onClick: () -> Unit) {
                     .background(Color(0xFF1A3366), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("📦", fontSize = 32.sp)
+                Image(
+                    painter = rememberDrawablePainter(case.imageRes),
+                    contentDescription = case.name,
+                    modifier = Modifier.size(48.dp),
+                    contentScale = ContentScale.Fit
+                )
             }
 
             Spacer(modifier = Modifier.width(16.dp))

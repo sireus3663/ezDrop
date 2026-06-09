@@ -1,6 +1,7 @@
 package com.ezDrop.app.data.repository
 
 import com.ezDrop.app.data.db.dao.InventoryDao
+import com.ezDrop.app.data.db.dao.InventoryItemEntry
 import com.ezDrop.app.data.db.dao.ItemDao
 import com.ezDrop.app.data.db.entity.InventoryEntity
 import com.ezDrop.app.data.db.entity.ItemEntity
@@ -13,10 +14,18 @@ class InventoryRepository(
         return inventoryDao.getUserItems(userId)
     }
 
+    suspend fun getUserInventoryEntries(userId: Long): List<InventoryItemEntry> {
+        return inventoryDao.getUserInventoryEntries(userId)
+    }
+
     suspend fun addItemToUser(userId: Long, itemId: Long): Long {
         return inventoryDao.insert(
             InventoryEntity(userId = userId, itemId = itemId)
         )
+    }
+
+    suspend fun deleteInventoryItem(inventoryId: Long): Int {
+        return inventoryDao.delete(inventoryId)
     }
 
     suspend fun getAllItems(): List<ItemEntity> {
