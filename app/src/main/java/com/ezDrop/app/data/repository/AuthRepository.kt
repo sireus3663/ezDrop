@@ -22,7 +22,7 @@ class AuthRepository(private val userDao: UserDao) {
         }
         if (userDao.getByNickname(nickname) != null) {
             return Result.failure(Exception("Nickname already taken"))
-        }
+        } //мб убрать
         val user = UserEntity(
             nickname = nickname,
             email = email,

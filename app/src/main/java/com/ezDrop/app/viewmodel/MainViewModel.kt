@@ -16,7 +16,8 @@ data class MainState(
     val user: UserEntity? = null,
     val nickname: String = "",
     val balance: Int = 0,
-    val level: Int = 1
+    val level: Int = 1,
+    val isLoading: Boolean = false
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -33,7 +34,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun loadUser() {
-        val userId = sessionManager.getUserId() ?: return
+        val userId = sessionManager.getUserId()
+        if (userId == null) {
+            _state.value = _state.value.copy(isLoading = false)
+            return
+        }
+        _state.value = _state.value.copy(isLoading = true)
         viewModelScope.launch {
             val user = authRepository.getUser(userId)
             if (user != null) {
@@ -41,8 +47,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     user = user,
                     nickname = user.nickname,
                     balance = user.balance,
-                    level = user.level
+                    level = user.level,
+                    isLoading = false
                 )
+            } else {
+                _state.value = _state.value.copy(isLoading = false)
             }
         }
     }

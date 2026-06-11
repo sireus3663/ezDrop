@@ -20,7 +20,7 @@ data class UserEntity(
     val balance: Int = 0,
     val level: Int = 1,
     val avatarUri: String? = null,
-    val xp: Int = 0,
-    val xpNeed: Int = 100,
-    val netWorth: Int = 0
+    val xp: Long = 0,
+    val xpNeed: Long = 100,
+    val netWorth: Long = 0
 )

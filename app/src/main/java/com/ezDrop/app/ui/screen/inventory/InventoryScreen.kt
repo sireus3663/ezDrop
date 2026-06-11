@@ -1,6 +1,5 @@
 package com.ezDrop.app.ui.screen.inventory
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -35,8 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezDrop.app.data.db.dao.InventoryItemEntry
-import com.ezDrop.app.ui.util.rememberDrawablePainter
-import com.ezDrop.app.ui.util.rememberNullablePainter
+import com.ezDrop.app.ui.util.ItemImage
 import com.ezDrop.app.viewmodel.InventoryViewModel
 
 @Composable
@@ -113,31 +112,17 @@ private fun InventoryItemCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val itemPainter = rememberNullablePainter(entry.imageRes)
-            if (itemPainter != null) {
-                Image(
-                    painter = itemPainter,
-                    contentDescription = entry.name,
-                    modifier = Modifier
-                        .size(52.dp)
-                        .background(color.copy(alpha = 0.2f), RoundedCornerShape(10.dp)),
-                    contentScale = ContentScale.Fit
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .background(color.copy(alpha = 0.2f), RoundedCornerShape(10.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = entry.name.take(2),
-                        color = color,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                }
-            }
+            ItemImage(
+                imageRes = entry.imageRes,
+                name = entry.name,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(color.copy(alpha = 0.2f)),
+                contentScale = ContentScale.Fit,
+                textColor = color,
+                textSize = 18.sp
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 

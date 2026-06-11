@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.ezDrop.app.data.db.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +35,26 @@ interface UserDao {
 
     @Query("UPDATE users SET level = :level WHERE id = :userId")
     suspend fun updateLevel(userId: Long, level: Int): Int
+
+
+    @Transaction
+    suspend fun addxp(userId: Long, xpToAdd: Int) {
+        val user = getById(userId) ?: return
+
+        var newXp = user.xp + xpToAdd
+        var newXpNeed = user.xpNeed
+        var newLvl = user.level
+
+        while (newXp >= newXpNeed) {
+            newXp -= newXpNeed
+            newXpNeed *= 2
+            newLvl++
+        }
+
+        val updatedUser = user.copy(xp = newXp, xpNeed = newXpNeed, level = newLvl)
+
+        update(updatedUser)
+    }
 
     @Query("UPDATE users SET nickname = :nickname WHERE id = :userId")
     suspend fun updateNickname(userId: Long, nickname: String): Int

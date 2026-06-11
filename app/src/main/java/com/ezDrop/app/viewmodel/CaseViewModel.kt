@@ -95,6 +95,7 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             userDao.updateBalance(userId, user.balance - detail.caseInfo.price)
+            userDao.addxp(userId, detail.caseInfo.price)
 
             val roll = Random.nextFloat() * detail.totalWeight
             var cumulative = 0f

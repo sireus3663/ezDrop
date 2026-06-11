@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -68,10 +69,23 @@ fun HomeScreen(
     val state by viewModel.state.collectAsState()
     var selected by remember { mutableStateOf(0) }
     val profileViewModel: ProfileViewModel = viewModel()
-    val user = state.user ?: return
     val profileState by profileViewModel.state.collectAsState()
-    val avatarUri = user.avatarUri ?: profileState.user?.avatarUri
     val inventoryViewModel: InventoryViewModel = viewModel()
+    val user = state.user
+    if (user == null) {
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF061733)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF3EC6FF))
+            }
+        }
+        return
+    }
+    val avatarUri = user.avatarUri ?: profileState.user?.avatarUri
 
     LaunchedEffect(profileState.avatarRefresh) {
         viewModel.refreshUser()

@@ -39,6 +39,7 @@ fun NavGraph(
             LoginScreen(
                 viewModel = authViewModel,
                 onLoginSuccess = {
+                    mainViewModel.refreshUser()
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
@@ -53,6 +54,7 @@ fun NavGraph(
             RegisterScreen(
                 viewModel = authViewModel,
                 onRegisterSuccess = {
+                    mainViewModel.refreshUser()
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }

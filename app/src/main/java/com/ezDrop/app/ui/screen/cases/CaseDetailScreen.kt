@@ -2,6 +2,7 @@ package com.ezDrop.app.ui.screen.cases
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -44,8 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezDrop.app.data.db.dao.CaseItemWithDetails
+import com.ezDrop.app.ui.util.ItemImage
 import com.ezDrop.app.ui.util.rememberDrawablePainter
-import com.ezDrop.app.ui.util.rememberNullablePainter
 import com.ezDrop.app.viewmodel.CaseDetail
 import com.ezDrop.app.viewmodel.CaseViewModel
 
@@ -238,31 +240,17 @@ private fun WonItemCard(item: CaseItemWithDetails) {
                 letterSpacing = 3.sp
             )
             Spacer(modifier = Modifier.height(12.dp))
-            val itemPainter = rememberNullablePainter(item.imageRes)
-            if (itemPainter != null) {
-                Image(
-                    painter = itemPainter,
-                    contentDescription = item.name,
-                    modifier = Modifier
-                        .size(72.dp)
-                        .background(color.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Fit
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .background(color.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = item.name.take(2),
-                        color = color,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+            ItemImage(
+                imageRes = item.imageRes,
+                name = item.name,
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(color.copy(alpha = 0.2f)),
+                contentScale = ContentScale.Fit,
+                textColor = color,
+                textSize = 28.sp
+            )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = item.name,
@@ -299,30 +287,17 @@ private fun ItemDropCard(item: CaseItemWithDetails, totalWeight: Int) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val itemPainter = rememberNullablePainter(item.imageRes)
-            if (itemPainter != null) {
-                Image(
-                    painter = itemPainter,
-                    contentDescription = item.name,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(rarityColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Fit
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(rarityColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = item.name.take(2),
-                        color = rarityColor,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+            ItemImage(
+                imageRes = item.imageRes,
+                name = item.name,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(rarityColor.copy(alpha = 0.2f)),
+                contentScale = ContentScale.Fit,
+                textColor = rarityColor,
+                textSize = 14.sp
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 
