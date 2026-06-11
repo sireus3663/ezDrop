@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImagePainter
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -58,9 +59,12 @@ fun ItemImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
     textColor: Color = Color.White,
-    textSize: TextUnit = 18.sp
+    textSize: TextUnit = 18.sp,
+    wearTier: String? = null
 ) {
-    val url = ItemImageMap.urls[imageRes]
+    val cache by ItemImageMap.urlCache.collectAsState()
+    val tier = wearTier ?: "Factory New"
+    val url = cache["$name ($tier)"]
 
     if (url != null) {
         SubcomposeAsyncImage(
@@ -72,7 +76,7 @@ fun ItemImage(
             modifier = modifier,
             contentScale = contentScale,
             success = { state ->
-                androidx.compose.foundation.Image(
+                Image(
                     painter = state.painter,
                     contentDescription = name,
                     modifier = Modifier.fillMaxSize(),
@@ -130,7 +134,8 @@ fun ItemImageWithWear(
     textColor: Color = Color.White,
     textSize: TextUnit = 18.sp
 ) {
-    val overlayRes = when (wearTier(wearFloat)) {
+    val tier = wearTier(wearFloat)
+    val overlayRes = when (tier) {
         "Factory New" -> R.drawable.wear_fn
         "Minimal Wear" -> R.drawable.wear_mw
         "Field-Tested" -> R.drawable.wear_ft
@@ -145,7 +150,8 @@ fun ItemImageWithWear(
             modifier = Modifier.matchParentSize(),
             contentScale = contentScale,
             textColor = textColor,
-            textSize = textSize
+            textSize = textSize,
+            wearTier = tier
         )
         Image(
             painter = painterResource(id = overlayRes),

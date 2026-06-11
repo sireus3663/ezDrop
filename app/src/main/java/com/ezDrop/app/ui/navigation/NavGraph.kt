@@ -13,8 +13,10 @@ import com.ezDrop.app.ui.screen.auth.LoginScreen
 import com.ezDrop.app.ui.screen.auth.RegisterScreen
 import com.ezDrop.app.ui.screen.cases.CaseDetailScreen
 import com.ezDrop.app.ui.screen.home.HomeScreen
+import com.ezDrop.app.ui.screen.splash.SplashScreen
 
 object Routes {
+    const val SPLASH = "splash"
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val HOME = "home"
@@ -34,6 +36,15 @@ fun NavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable(Routes.SPLASH) {
+            SplashScreen(
+                onLoaded = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Routes.LOGIN) {
             val authViewModel: AuthViewModel = viewModel()
             LoginScreen(

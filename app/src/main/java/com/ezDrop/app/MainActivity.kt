@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         }
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
-        val startDestination = "login"
+        val startDestination = "splash"
         setContent {
             ProjectTheme {
                 Surface(
