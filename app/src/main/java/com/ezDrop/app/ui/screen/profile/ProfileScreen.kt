@@ -174,14 +174,14 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         StatCard(
-            number = user.balance,
+            number = user.balance.toLong(),
             label = "balance",
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         StatCard(
-            number = state.inventoryValue,
+            number = state.inventoryValue.toLong(),
             label = "inventory coast",
         )
 
@@ -482,7 +482,7 @@ fun ProfileTopBar(
 
 @Composable
 private fun StatCard(
-    number: Int,
+    number: Long,
     label: String
 ) {
     Box(

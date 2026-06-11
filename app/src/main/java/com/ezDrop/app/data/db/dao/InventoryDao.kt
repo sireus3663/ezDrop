@@ -12,10 +12,11 @@ data class InventoryItemEntry(
     val itemId: Long,
     val name: String,
     val rarity: String,
-    val quality: String,
     val category: String,
     val imageRes: String,
-    val price: Int
+    val basePrice: Int,
+    val wearFloat: Float,
+    val finalPrice: Int
 )
 
 @Dao
@@ -35,15 +36,16 @@ interface InventoryDao {
     suspend fun delete(id: Long): Int
 
     @Query("""
-        SELECT COALESCE(SUM(items.price), 0) FROM items
+        SELECT COALESCE(SUM(items.basePrice), 0) FROM items
         INNER JOIN user_inventory ON items.id = user_inventory.itemId
         WHERE user_inventory.userId = :userId
     """)
     suspend fun getInventoryValue(userId: Long): Int
 
     @Query("""
-        SELECT ui.id AS inventoryId, i.id AS itemId, i.name, i.rarity, i.quality,
-               i.category, i.imageRes, i.price
+        SELECT ui.id AS inventoryId, i.id AS itemId, i.name, i.rarity,
+               i.category, i.imageRes, i.basePrice,
+               ui.wearFloat, ui.finalPrice
         FROM user_inventory ui
         INNER JOIN items i ON ui.itemId = i.id
         WHERE ui.userId = :userId

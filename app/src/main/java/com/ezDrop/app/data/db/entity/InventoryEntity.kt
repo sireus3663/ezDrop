@@ -30,5 +30,7 @@ data class InventoryEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val userId: Long,
-    val itemId: Long
+    val itemId: Long,
+    val wearFloat: Float = 0f,
+    val finalPrice: Int = 0
 )

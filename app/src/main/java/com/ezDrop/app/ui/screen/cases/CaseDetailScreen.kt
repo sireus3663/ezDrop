@@ -1,5 +1,6 @@
 package com.ezDrop.app.ui.screen.cases
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezDrop.app.data.db.dao.CaseItemWithDetails
 import com.ezDrop.app.ui.util.ItemImage
+import com.ezDrop.app.ui.util.ItemImageWithWear
 import com.ezDrop.app.ui.util.rememberDrawablePainter
 import com.ezDrop.app.viewmodel.CaseDetail
 import com.ezDrop.app.viewmodel.CaseViewModel
@@ -177,8 +179,12 @@ fun CaseDetailScreen(
     }
 
     if (showResult && wonItem != null) {
+        val opening = openingResult ?: return
         ResultSheet(
             item = wonItem,
+            wearFloat = opening.wearFloat,
+            wearTier = opening.wearTier,
+            finalPrice = opening.finalPrice,
             onDismiss = {
                 showResult = false
                 caseViewModel.resetOpeningResult()
@@ -191,6 +197,9 @@ fun CaseDetailScreen(
 @Composable
 private fun ResultSheet(
     item: CaseItemWithDetails,
+    wearFloat: Float,
+    wearTier: String,
+    finalPrice: Int,
     onDismiss: () -> Unit
 ) {
     ModalBottomSheet(
@@ -198,7 +207,7 @@ private fun ResultSheet(
         containerColor = Color(0xFF0D2147),
         contentColor = Color.White
     ) {
-        WonItemCard(item = item)
+        WonItemCard(item = item, wearFloat = wearFloat, wearTier = wearTier, finalPrice = finalPrice)
         Button(
             onClick = onDismiss,
             modifier = Modifier
@@ -219,7 +228,7 @@ private fun ResultSheet(
 }
 
 @Composable
-private fun WonItemCard(item: CaseItemWithDetails) {
+private fun WonItemCard(item: CaseItemWithDetails, wearFloat: Float, wearTier: String, finalPrice: Int) {
     val color = rarityColor(item.rarity)
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -240,9 +249,10 @@ private fun WonItemCard(item: CaseItemWithDetails) {
                 letterSpacing = 3.sp
             )
             Spacer(modifier = Modifier.height(12.dp))
-            ItemImage(
+            ItemImageWithWear(
                 imageRes = item.imageRes,
                 name = item.name,
+                wearFloat = wearFloat,
                 modifier = Modifier
                     .size(72.dp)
                     .clip(RoundedCornerShape(12.dp))
@@ -259,9 +269,16 @@ private fun WonItemCard(item: CaseItemWithDetails) {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "${item.quality} \u00B7 ${item.category}",
+                text = "$wearTier \u00B7 ${item.category}",
                 color = Color.White.copy(alpha = 0.6f),
                 fontSize = 13.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "$finalPrice $",
+                color = color,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -309,7 +326,7 @@ private fun ItemDropCard(item: CaseItemWithDetails, totalWeight: Int) {
                     fontSize = 14.sp
                 )
                 Text(
-                    text = item.quality,
+                    text = item.rarity,
                     color = Color.White.copy(alpha = 0.5f),
                     fontSize = 12.sp
                 )

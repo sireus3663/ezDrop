@@ -48,8 +48,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             inventoryRepository.deleteInventoryItem(entry.inventoryId)
 
             val user = userDao.getById(userId) ?: return@launch
-            userDao.updateBalance(userId, user.balance + entry.price)
-            val newNetWorth = user.netWorth + entry.price
+            userDao.updateBalance(userId, user.balance + entry.finalPrice)
+            val newNetWorth = user.netWorth + entry.finalPrice
             userDao.updateNetWorth(userId, newNetWorth)
 
             val items = inventoryRepository.getUserInventoryEntries(userId)

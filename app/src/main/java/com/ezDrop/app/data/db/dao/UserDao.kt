@@ -63,5 +63,5 @@ interface UserDao {
     suspend fun updateAvatarUri(userId: Long, uri: String?): Int
 
     @Query("UPDATE users SET netWorth = :netWorth WHERE id = :userId")
-    suspend fun updateNetWorth(userId: Long, netWorth: Int): Int
+    suspend fun updateNetWorth(userId: Long, netWorth: Long): Int
 }

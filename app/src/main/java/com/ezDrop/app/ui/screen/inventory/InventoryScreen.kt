@@ -35,7 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ezDrop.app.data.db.dao.InventoryItemEntry
+import com.ezDrop.app.data.util.wearTier
 import com.ezDrop.app.ui.util.ItemImage
+import com.ezDrop.app.ui.util.ItemImageWithWear
 import com.ezDrop.app.viewmodel.InventoryViewModel
 
 @Composable
@@ -112,9 +114,10 @@ private fun InventoryItemCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ItemImage(
+            ItemImageWithWear(
                 imageRes = entry.imageRes,
                 name = entry.name,
+                wearFloat = entry.wearFloat,
                 modifier = Modifier
                     .size(52.dp)
                     .clip(RoundedCornerShape(10.dp))
@@ -134,7 +137,7 @@ private fun InventoryItemCard(
                     fontSize = 15.sp
                 )
                 Text(
-                    text = "${entry.quality} \u00B7 ${entry.rarity}",
+                    text = "${wearTier(entry.wearFloat)} \u00B7 ${entry.rarity}",
                     color = Color.White.copy(alpha = 0.5f),
                     fontSize = 12.sp
                 )
@@ -159,7 +162,7 @@ private fun InventoryItemCard(
                     )
                 } else {
                     Text(
-                        text = "Sell ${entry.price}$",
+                        text = "Sell ${entry.finalPrice}$",
                         color = Color(0xFF3EC6FF),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold

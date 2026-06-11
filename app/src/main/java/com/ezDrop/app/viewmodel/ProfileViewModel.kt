@@ -56,7 +56,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             val hasData = _state.value.user != null
             _state.value = _state.value.copy(isLoading = !hasData)
             val user = authRepository.getUser(userId)
-            val inventoryValue = inventoryRepository.getUserInventory(userId).sumOf { it.price }
+            val inventoryValue = inventoryRepository.getUserInventory(userId).sumOf { it.basePrice }
             _state.value = _state.value.copy(
                 user = user,
                 inventoryValue = inventoryValue,

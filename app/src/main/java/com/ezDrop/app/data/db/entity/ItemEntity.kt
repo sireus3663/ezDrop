@@ -9,8 +9,7 @@ data class ItemEntity(
     val id: Long = 0,
     val name: String,
     val rarity: String,
-    val quality: String,
     val category: String,
     val imageRes: String,
-    val price: Int = 0
+    val basePrice: Int = 0
 )

@@ -12,9 +12,9 @@ data class CaseItemWithDetails(
     val dropWeight: Int,
     val name: String,
     val rarity: String,
-    val quality: String,
     val category: String,
-    val imageRes: String
+    val imageRes: String,
+    val basePrice: Int
 )
 
 @Dao
@@ -25,7 +25,7 @@ interface CaseItemDao {
 
     @Query("""
         SELECT ci.caseId, ci.itemId, ci.dropWeight,
-               i.name, i.rarity, i.quality, i.category, i.imageRes
+               i.name, i.rarity, i.category, i.imageRes, i.basePrice
         FROM case_items ci
         INNER JOIN items i ON ci.itemId = i.id
         WHERE ci.caseId = :caseId

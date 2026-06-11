@@ -9,6 +9,8 @@ import com.ezDrop.app.data.db.dao.CaseItemWithDetails
 import com.ezDrop.app.data.db.entity.CaseEntity
 import com.ezDrop.app.data.db.entity.InventoryEntity
 import com.ezDrop.app.data.repository.InventoryRepository
+import com.ezDrop.app.data.util.floatToPrice
+import com.ezDrop.app.data.util.wearTier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +25,9 @@ data class CaseDetail(
 
 data class CaseOpeningResult(
     val wonItem: CaseItemWithDetails? = null,
+    val wearFloat: Float = 0f,
+    val wearTier: String = "",
+    val finalPrice: Int = 0,
     val error: String? = null
 ) {
     val isSuccess get() = wonItem != null
@@ -95,7 +100,7 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             userDao.updateBalance(userId, user.balance - detail.caseInfo.price)
-            userDao.addxp(userId, detail.caseInfo.price)
+
 
             val roll = Random.nextFloat() * detail.totalWeight
             var cumulative = 0f
@@ -104,11 +109,25 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
                 roll <= cumulative
             }
 
+            val wearFloat = Random.nextFloat()
+            val tier = wearTier(wearFloat)
+            val finalPrice = floatToPrice(wonItem.basePrice, wearFloat)
+            userDao.addxp(userId, finalPrice)
             inventoryDao.insert(
-                InventoryEntity(userId = userId, itemId = wonItem.itemId)
+                InventoryEntity(
+                    userId = userId,
+                    itemId = wonItem.itemId,
+                    wearFloat = wearFloat,
+                    finalPrice = finalPrice
+                )
             )
 
-            _openingResult.value = CaseOpeningResult(wonItem = wonItem)
+            _openingResult.value = CaseOpeningResult(
+                wonItem = wonItem,
+                wearFloat = wearFloat,
+                wearTier = tier,
+                finalPrice = finalPrice
+            )
         }
     }
 

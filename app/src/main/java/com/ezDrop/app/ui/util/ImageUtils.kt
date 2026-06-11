@@ -1,6 +1,7 @@
 package com.ezDrop.app.ui.util
 
 import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
@@ -22,6 +23,7 @@ import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.ezDrop.app.R
+import com.ezDrop.app.data.util.wearTier
 
 @Composable
 fun rememberDrawablePainter(imageRes: String): Painter {
@@ -115,5 +117,41 @@ private fun FallbackImage(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+@Composable
+fun ItemImageWithWear(
+    imageRes: String,
+    name: String,
+    wearFloat: Float,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit,
+    textColor: Color = Color.White,
+    textSize: TextUnit = 18.sp
+) {
+    val overlayRes = when (wearTier(wearFloat)) {
+        "Factory New" -> R.drawable.wear_fn
+        "Minimal Wear" -> R.drawable.wear_mw
+        "Field-Tested" -> R.drawable.wear_ft
+        "Well-Worn" -> R.drawable.wear_ww
+        "Battle-Scarred" -> R.drawable.wear_bs
+        else -> R.drawable.wear_fn
+    }
+    Box(modifier = modifier) {
+        ItemImage(
+            imageRes = imageRes,
+            name = name,
+            modifier = Modifier.matchParentSize(),
+            contentScale = contentScale,
+            textColor = textColor,
+            textSize = textSize
+        )
+        Image(
+            painter = painterResource(id = overlayRes),
+            contentDescription = null,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Crop
+        )
     }
 }
