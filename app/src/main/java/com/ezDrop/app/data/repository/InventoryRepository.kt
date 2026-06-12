@@ -18,6 +18,10 @@ class InventoryRepository(
         return inventoryDao.getUserInventoryEntries(userId)
     }
 
+    suspend fun getInventoryEntry(inventoryId: Long): InventoryItemEntry? {
+        return inventoryDao.getInventoryEntry(inventoryId)
+    }
+
     suspend fun addItemToUser(userId: Long, itemId: Long): Long {
         return inventoryDao.insert(
             InventoryEntity(userId = userId, itemId = itemId)

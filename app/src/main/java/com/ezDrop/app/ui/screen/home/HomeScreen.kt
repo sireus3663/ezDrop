@@ -37,6 +37,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,10 +65,11 @@ import com.ezDrop.app.viewmodel.ProfileViewModel
 fun HomeScreen(
     viewModel: MainViewModel,
     onLogout: () -> Unit,
-    onNavigateToCase: (Long) -> Unit
+    onNavigateToCase: (Long) -> Unit,
+    onNavigateToInventoryDetail: (Long) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
-    var selected by remember { mutableStateOf(0) }
+    var selected by rememberSaveable { mutableStateOf(0) }
     val profileViewModel: ProfileViewModel = viewModel()
     val profileState by profileViewModel.state.collectAsState()
     val inventoryViewModel: InventoryViewModel = viewModel()
@@ -292,6 +294,7 @@ fun HomeScreen(
                 )
                 2 -> InventoryScreen(
                     onBalanceChanged = { viewModel.refreshUser() },
+                    onItemClick = onNavigateToInventoryDetail,
                     inventoryViewModel = inventoryViewModel
                 )
             }

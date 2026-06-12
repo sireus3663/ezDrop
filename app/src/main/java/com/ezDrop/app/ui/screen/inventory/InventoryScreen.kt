@@ -1,6 +1,7 @@
 package com.ezDrop.app.ui.screen.inventory
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import com.ezDrop.app.viewmodel.InventoryViewModel
 @Composable
 fun InventoryScreen(
     onBalanceChanged: () -> Unit,
+    onItemClick: (Long) -> Unit = {},
     inventoryViewModel: InventoryViewModel = viewModel()
 ) {
     val state by inventoryViewModel.state.collectAsState()
@@ -89,7 +91,8 @@ fun InventoryScreen(
             InventoryItemCard(
                 entry = entry,
                 isSelling = state.sellingInventoryId == entry.inventoryId,
-                onSell = { inventoryViewModel.sellItem(entry) }
+                onSell = { inventoryViewModel.sellItem(entry) },
+                onClick = { onItemClick(entry.inventoryId) }
             )
         }
     }
@@ -99,12 +102,15 @@ fun InventoryScreen(
 private fun InventoryItemCard(
     entry: InventoryItemEntry,
     isSelling: Boolean,
-    onSell: () -> Unit
+    onSell: () -> Unit,
+    onClick: () -> Unit
 ) {
     val color = rarityColor(entry.rarity)
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0D2147))
     ) {

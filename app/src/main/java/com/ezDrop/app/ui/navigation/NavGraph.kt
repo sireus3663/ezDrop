@@ -13,6 +13,7 @@ import com.ezDrop.app.ui.screen.auth.LoginScreen
 import com.ezDrop.app.ui.screen.auth.RegisterScreen
 import com.ezDrop.app.ui.screen.cases.CaseDetailScreen
 import com.ezDrop.app.ui.screen.home.HomeScreen
+import com.ezDrop.app.ui.screen.inventory.InventoryDetailScreen
 import com.ezDrop.app.ui.screen.splash.SplashScreen
 
 object Routes {
@@ -21,8 +22,10 @@ object Routes {
     const val REGISTER = "register"
     const val HOME = "home"
     const val CASE_DETAIL = "case_detail/{caseId}"
+    const val INVENTORY_DETAIL = "inventory_detail/{inventoryId}"
 
     fun caseDetail(caseId: Long) = "case_detail/$caseId"
+    fun inventoryDetail(inventoryId: Long) = "inventory_detail/$inventoryId"
 }
 
 @Composable
@@ -86,6 +89,9 @@ fun NavGraph(
                 },
                 onNavigateToCase = { caseId ->
                     navController.navigate(Routes.caseDetail(caseId))
+                },
+                onNavigateToInventoryDetail = { inventoryId ->
+                    navController.navigate(Routes.inventoryDetail(inventoryId))
                 }
             )
         }
@@ -98,6 +104,20 @@ fun NavGraph(
                 caseId = caseId,
                 onBack = { navController.popBackStack() },
                 onBalanceChanged = { mainViewModel.refreshUser() }
+            )
+        }
+        composable(
+            route = Routes.INVENTORY_DETAIL,
+            arguments = listOf(navArgument("inventoryId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val inventoryId = backStackEntry.arguments?.getLong("inventoryId") ?: return@composable
+            InventoryDetailScreen(
+                inventoryId = inventoryId,
+                onBack = { navController.popBackStack() },
+                onSold = {
+                    mainViewModel.refreshUser()
+                    navController.popBackStack()
+                }
             )
         }
     }

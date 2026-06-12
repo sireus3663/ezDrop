@@ -11,6 +11,7 @@ data class ApiSkin(
     val marketHashName: String,
     val wear: ApiWear? = null,
     val image: String,
+    val description: String = "",
 )
 
 @Serializable

@@ -51,4 +51,14 @@ interface InventoryDao {
         WHERE ui.userId = :userId
     """)
     suspend fun getUserInventoryEntries(userId: Long): List<InventoryItemEntry>
+
+    @Query("""
+        SELECT ui.id AS inventoryId, i.id AS itemId, i.name, i.rarity,
+               i.category, i.imageRes, i.basePrice,
+               ui.wearFloat, ui.finalPrice
+        FROM user_inventory ui
+        INNER JOIN items i ON ui.itemId = i.id
+        WHERE ui.id = :inventoryId
+    """)
+    suspend fun getInventoryEntry(inventoryId: Long): InventoryItemEntry?
 }

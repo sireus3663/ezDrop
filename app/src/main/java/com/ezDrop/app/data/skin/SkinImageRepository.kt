@@ -22,15 +22,10 @@ object SkinImageRepository {
     private const val API_URL = "https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins_not_grouped.json"
     private const val CACHE_FILENAME = "skin_image_cache.json"
     private const val STALE_DAYS = 7L
+    private const val CACHE_VERSION = 3
 
     private val wearOrder = listOf(
         "Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"
-    )
-
-    private val builtinFallbacks = mapOf(
-        "Karambit | Fade" to mapOf(
-            "Factory New" to "https://community.akamai.steamstatic.com/economy/image/i0CoZ81Ui0m-9KwlBY1L_18myuGuq1wfhWSaZgMttyVfPaERSR0Wqmu7LAocGIGz3UqlXOLrxM-vMGmW8VNxu5Dx60noTyL6kJ_m-B1Q7uCvZaZkNM-SD1iWwOpzj-1gSCGn20tztm_UyIn_JHKUbgYlWMcmQ-ZcskSwldS0MOnntAfd3YlMzH35jntXrnE8SOGRGG8"
-        )
     )
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -42,6 +37,9 @@ object SkinImageRepository {
     private val _urlCache = MutableStateFlow<Map<String, String>>(emptyMap())
     val urlCache: StateFlow<Map<String, String>> = _urlCache.asStateFlow()
 
+    private val _descriptionCache = MutableStateFlow<Map<String, String>>(emptyMap())
+    val descriptionCache: StateFlow<Map<String, String>> = _descriptionCache.asStateFlow()
+
     private var loaded = false
 
     private val knownItems = setOf(
@@ -49,7 +47,7 @@ object SkinImageRepository {
         "P250 | Boreal Forest",
         "SSG 08 | Jungle Dashed",
         "FAMAS | Colony",
-        "MP5-SD | Jungle Slipstream",
+        "MP5-SD | Lime Hex",
         "MP9 | Rose Iron",
         "MAC-10 | Silver",
         "P2000 | Ivory",
@@ -78,7 +76,11 @@ object SkinImageRepository {
             Log.d(TAG, "Cache exists=${cacheFile.exists()}, path=${cacheFile.absolutePath}")
             if (cacheFile.exists() && !isStale(cacheFile)) {
                 Log.d(TAG, "Loading from cache")
-                loadFromCache(cacheFile)
+                val loadedFromCache = loadFromCache(cacheFile)
+                if (!loadedFromCache) {
+                    Log.d(TAG, "Cache invalid, re-fetching")
+                    fetchAndCache(context)
+                }
             } else {
                 Log.d(TAG, "Cache missing or stale, fetching from API")
                 fetchAndCache(context)
@@ -93,26 +95,26 @@ object SkinImageRepository {
         return _urlCache.value[marketName]
     }
 
+    fun getDescription(name: String): String? {
+        return _descriptionCache.value[name]
+    }
+
     private fun isStale(file: File): Boolean {
         val age = System.currentTimeMillis() - file.lastModified()
         return age > STALE_DAYS * 24 * 60 * 60 * 1000
     }
 
-    private fun buildExpandedCache(raw: Map<String, String>): Map<String, String> {
+    private fun buildExpandedCache(raw: Map<String, String>, descriptions: Map<String, String> = emptyMap()): Map<String, String> {
         val grouped = mutableMapOf<String, MutableMap<String, String>>()
+        val descMap = mutableMapOf<String, String>()
 
         for ((key, url) in raw) {
-            val baseName = key.substringBeforeLast(" (")
+            val baseName = key.substringBeforeLast(" (").removePrefix("★ ")
             val wear = key.substringAfterLast(" (", "").substringBefore(")")
             grouped.getOrPut(baseName) { mutableMapOf() }[wear] = url
-        }
-
-        for ((baseName, wears) in builtinFallbacks) {
-            val existing = grouped.getOrPut(baseName) { mutableMapOf() }
-            for ((wear, url) in wears) {
-                if (wear !in existing) {
-                    existing[wear] = url
-                }
+            val desc = descriptions[key]
+            if (desc != null && desc !in descMap.values) {
+                descMap[baseName] = desc
             }
         }
 
@@ -126,6 +128,7 @@ object SkinImageRepository {
             }
         }
 
+        _descriptionCache.value = descMap
         return expanded
     }
 
@@ -144,16 +147,25 @@ object SkinImageRepository {
         return null
     }
 
-    private fun loadFromCache(file: File) {
-        try {
+    private fun loadFromCache(file: File): Boolean {
+        return try {
             val text = file.readText()
             Log.d(TAG, "Cache file size: ${text.length} bytes")
-            val entries = json.decodeFromString<List<CacheEntry>>(text)
-            Log.d(TAG, "Loaded ${entries.size} entries from cache")
-            _urlCache.value = buildExpandedCache(entries.associate { it.key to it.url })
+            val data = json.decodeFromString<CacheData>(text)
+            if (data.version != CACHE_VERSION) {
+                Log.d(TAG, "Cache version mismatch (${data.version} != $CACHE_VERSION), deleting")
+                file.delete()
+                return false
+            }
+            Log.d(TAG, "Loaded ${data.entries.size} entries from cache")
+            val urls = data.entries.associate { it.key to it.url }
+            val descs = data.entries.associate { it.key to it.description }
+            _urlCache.value = buildExpandedCache(urls, descs)
             Log.d(TAG, "Cache populated, keys: ${_urlCache.value.keys.take(3)}...")
+            true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load cache", e)
+            false
         }
     }
 
@@ -174,11 +186,14 @@ object SkinImageRepository {
             val cacheEntries = allSkins
                 .filter { skin ->
                     knownItems.any { known ->
-                        skin.marketHashName.startsWith("$known (") || skin.marketHashName == known
+                        val name = skin.marketHashName
+                        name == known ||
+                        name.startsWith("$known (") ||
+                        name.startsWith("★ $known (")
                     }
                 }
                 .map { skin ->
-                    CacheEntry(key = skin.marketHashName, url = skin.image)
+                    CacheEntry(key = skin.marketHashName, url = skin.image, description = skin.description)
                 }
 
             Log.d(TAG, "Filtered to ${cacheEntries.size} entries for our items")
@@ -186,10 +201,12 @@ object SkinImageRepository {
                 Log.d(TAG, "Sample: ${cacheEntries.first().key} -> ${cacheEntries.first().url.take(60)}...")
             }
 
-            _urlCache.value = buildExpandedCache(cacheEntries.associate { it.key to it.url })
+            val urls = cacheEntries.associate { it.key to it.url }
+            val descs = cacheEntries.associate { it.key to it.description }
+            _urlCache.value = buildExpandedCache(urls, descs)
 
             val cacheFile = File(context.filesDir, CACHE_FILENAME)
-            cacheFile.writeText(json.encodeToString(cacheEntries))
+            cacheFile.writeText(json.encodeToString(CacheData(version = CACHE_VERSION, entries = cacheEntries)))
             Log.d(TAG, "Cache written to ${cacheFile.absolutePath}")
         } catch (e: Exception) {
             Log.e(TAG, "Fetch failed", e)
@@ -198,7 +215,14 @@ object SkinImageRepository {
 }
 
 @Serializable
+private data class CacheData(
+    val version: Int,
+    val entries: List<CacheEntry>,
+)
+
+@Serializable
 private data class CacheEntry(
     val key: String,
     val url: String,
+    val description: String = "",
 )

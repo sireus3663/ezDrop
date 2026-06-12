@@ -35,17 +35,6 @@ fun rememberDrawablePainter(imageRes: String): Painter {
     return painterResource(id = id)
 }
 
-@Composable
-fun rememberNullablePainter(imageRes: String): Painter? {
-    val context = LocalContext.current
-    val id = remember(imageRes) {
-        context.resources
-            .getIdentifier(imageRes, "drawable", context.packageName)
-            .takeIf { it != 0 }
-    }
-    return id?.let { painterResource(id = it) }
-}
-
 fun resolveDrawableId(context: Context, imageRes: String): Int {
     return context.resources
         .getIdentifier(imageRes, "drawable", context.packageName)
@@ -100,27 +89,17 @@ private fun FallbackImage(
     textColor: Color,
     textSize: TextUnit
 ) {
-    val painter = rememberNullablePainter(imageRes)
-    if (painter != null) {
-        androidx.compose.foundation.Image(
-            painter = painter,
-            contentDescription = name,
-            modifier = modifier,
-            contentScale = ContentScale.Fit
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = name.take(2),
+            color = textColor,
+            fontSize = textSize,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
         )
-    } else {
-        Box(
-            modifier = modifier,
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = name.take(2),
-                color = textColor,
-                fontSize = textSize,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
     }
 }
 

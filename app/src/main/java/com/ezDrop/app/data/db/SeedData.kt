@@ -11,7 +11,7 @@ object SeedData {
         ItemEntity(name = "P250 | Boreal Forest", rarity = "common", category = "pistol", imageRes = "p250_boreal", basePrice = 60),
         ItemEntity(name = "SSG 08 | Jungle Dashed", rarity = "common", category = "sniper", imageRes = "ssg_jungle", basePrice = 70),
         ItemEntity(name = "FAMAS | Colony", rarity = "common", category = "rifle", imageRes = "famas_colony", basePrice = 80),
-        ItemEntity(name = "MP5-SD | Jungle Slipstream", rarity = "common", category = "smg", imageRes = "mp5_jungle", basePrice = 90),
+        ItemEntity(name = "MP5-SD | Lime Hex", rarity = "common", category = "smg", imageRes = "mp5_lime_hex", basePrice = 60),
         ItemEntity(name = "MP9 | Rose Iron", rarity = "uncommon", category = "smg", imageRes = "mp9_rose", basePrice = 200),
         ItemEntity(name = "MAC-10 | Silver", rarity = "uncommon", category = "smg", imageRes = "mac10_silver", basePrice = 250),
         ItemEntity(name = "P2000 | Ivory", rarity = "uncommon", category = "pistol", imageRes = "p2000_ivory", basePrice = 180),
