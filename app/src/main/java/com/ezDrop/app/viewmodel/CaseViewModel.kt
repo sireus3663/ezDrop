@@ -33,6 +33,14 @@ data class CaseOpeningResult(
     val isSuccess get() = wonItem != null
 }
 
+data class CaseOpeningState(
+    val isAnimating: Boolean = false,
+    val showResults: Boolean = false,
+    val results: List<CaseOpeningResult> = emptyList(),
+    val count: Int = 1,
+    val error: String? = null,
+)
+
 class CaseViewModel(application: Application) : AndroidViewModel(application) {
     private val database = (application as EzDropApp).database
     private val caseDao = database.caseDao()
@@ -50,8 +58,8 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
     private val _detail = MutableStateFlow<CaseDetail?>(null)
     val detail: StateFlow<CaseDetail?> = _detail.asStateFlow()
 
-    private val _openingResult = MutableStateFlow<CaseOpeningResult?>(null)
-    val openingResult: StateFlow<CaseOpeningResult?> = _openingResult.asStateFlow()
+    private val _openingState = MutableStateFlow(CaseOpeningState())
+    val openingState: StateFlow<CaseOpeningState> = _openingState.asStateFlow()
 
     init {
         loadCases()
@@ -66,7 +74,7 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
     fun loadCaseDetail(caseId: Long) {
         viewModelScope.launch {
             _caseId = caseId
-            _openingResult.value = null
+            _openingState.value = CaseOpeningState()
             val caseInfo = caseDao.getById(caseId) ?: return@launch
             val items = caseItemDao.getItemsForCase(caseId)
             val totalWeight = items.sumOf { it.dropWeight }
@@ -74,61 +82,82 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun resetOpeningResult() {
-        _openingResult.value = null
-    }
-
-    fun openCase() {
+    fun startOpening(count: Int) {
         val caseId = _caseId ?: return
         viewModelScope.launch {
+            _openingState.value = CaseOpeningState(count = count, isAnimating = true)
+
             val detail = _detail.value ?: return@launch
             val userId = sessionManager.getUserId() ?: return@launch
             val user = userDao.getById(userId) ?: return@launch
 
+            val totalPrice = detail.caseInfo.price * count
+
             if (user.level < detail.caseInfo.requiredLevel) {
-                _openingResult.value = CaseOpeningResult(
+                _openingState.value = CaseOpeningState(
+                    count = count,
                     error = "Need level ${detail.caseInfo.requiredLevel}, you have ${user.level}"
                 )
                 return@launch
             }
 
-            if (user.balance < detail.caseInfo.price) {
-                _openingResult.value = CaseOpeningResult(
-                    error = "Need ${detail.caseInfo.price}$, you have ${user.balance}$"
+            if (user.balance < totalPrice) {
+                _openingState.value = CaseOpeningState(
+                    count = count,
+                    error = "Need $totalPrice$, you have ${user.balance}$"
                 )
                 return@launch
             }
 
-            userDao.updateBalance(userId, user.balance - detail.caseInfo.price)
+            userDao.updateBalance(userId, user.balance - totalPrice)
 
+            val results = List(count) { rollItem(detail) }
 
-            val roll = Random.nextFloat() * detail.totalWeight
-            var cumulative = 0f
-            val wonItem = detail.items.first { item ->
-                cumulative += item.dropWeight
-                roll <= cumulative
+            for (r in results) {
+                userDao.addxp(userId, r.finalPrice)
+                inventoryDao.insert(
+                    InventoryEntity(
+                        userId = userId,
+                        itemId = r.wonItem!!.itemId,
+                        wearFloat = r.wearFloat,
+                        finalPrice = r.finalPrice
+                    )
+                )
             }
 
-            val wearFloat = Random.nextFloat()
-            val tier = wearTier(wearFloat)
-            val finalPrice = floatToPrice(wonItem.basePrice, wearFloat)
-            userDao.addxp(userId, finalPrice)
-            inventoryDao.insert(
-                InventoryEntity(
-                    userId = userId,
-                    itemId = wonItem.itemId,
-                    wearFloat = wearFloat,
-                    finalPrice = finalPrice
-                )
-            )
-
-            _openingResult.value = CaseOpeningResult(
-                wonItem = wonItem,
-                wearFloat = wearFloat,
-                wearTier = tier,
-                finalPrice = finalPrice
+            _openingState.value = CaseOpeningState(
+                count = count,
+                isAnimating = true,
+                results = results,
             )
         }
+    }
+
+    fun onAnimationEnd() {
+        val current = _openingState.value
+        _openingState.value = current.copy(isAnimating = false, showResults = true)
+    }
+
+    fun resetOpeningState() {
+        _openingState.value = CaseOpeningState()
+    }
+
+    private fun rollItem(detail: CaseDetail): CaseOpeningResult {
+        val roll = Random.nextFloat() * detail.totalWeight
+        var cumulative = 0f
+        val wonItem = detail.items.first { item ->
+            cumulative += item.dropWeight
+            roll <= cumulative
+        }
+        val wearFloat = Random.nextFloat()
+        val tier = wearTier(wearFloat)
+        val finalPrice = floatToPrice(wonItem.basePrice, wearFloat)
+        return CaseOpeningResult(
+            wonItem = wonItem,
+            wearFloat = wearFloat,
+            wearTier = tier,
+            finalPrice = finalPrice
+        )
     }
 
     private var _caseId: Long? = null

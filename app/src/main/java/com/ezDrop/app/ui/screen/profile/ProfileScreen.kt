@@ -210,7 +210,7 @@ fun ProfileScreen(
                         .padding(bottom = 32.dp)
                 ) {
                     Text(
-                        text = "Настройки",
+                        text = "Settings",
                         color = Color.White,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
@@ -271,7 +271,7 @@ fun ProfileScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Изменить аватарку",
+                            text = "Change Avatar",
                             color = Color.White,
                             fontSize = 15.sp
                         )
@@ -280,7 +280,7 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Никнейм",
+                    text = "Nickname",
                     color = Color.White.copy(alpha = 0.7f),
                     fontSize = 14.sp,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -330,7 +330,7 @@ fun ProfileScreen(
                         )
                     } else {
                         Text(
-                            text = "Сохранить",
+                            text = "Save",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF061733)
@@ -345,7 +345,7 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Закрыть",
+                        text = "Close",
                         color = Color.White.copy(alpha = 0.6f),
                         fontSize = 15.sp
                     )
@@ -408,7 +408,7 @@ fun ProfileTopBar(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Настроить",
+                    text = "Settings",
                     color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
