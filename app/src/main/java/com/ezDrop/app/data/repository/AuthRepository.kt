@@ -24,6 +24,7 @@ class AuthRepository(private val userDao: UserDao) {
             return Result.failure(Exception("Nickname already taken"))
         } //мб убрать
         val user = UserEntity(
+            balance = 300,
             nickname = nickname,
             email = email,
             password = hashPassword(password)

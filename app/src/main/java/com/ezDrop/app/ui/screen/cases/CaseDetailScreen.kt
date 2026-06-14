@@ -97,6 +97,10 @@ fun CaseDetailScreen(
     }
 
     var caseCount by remember { mutableStateOf(1) }
+    if (data.caseInfo.price == 0 && caseCount > 1) {
+        caseCount = 1
+    }
+    var backClicked by remember { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -117,7 +121,12 @@ fun CaseDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
-                    onClick = onBack,
+                    onClick = {
+                        if (!backClicked) {
+                            backClicked = true
+                            onBack()
+                        }
+                    },
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .offset(y = (-8).dp)
@@ -129,7 +138,7 @@ fun CaseDetailScreen(
                     )
                 }
 
-                if (openingState.isAnimating && openingState.results.isNotEmpty()) {
+                if (openingState.results.isNotEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -202,7 +211,7 @@ fun CaseDetailScreen(
                     val selected = caseCount == count
                     Button(
                         onClick = { caseCount = count },
-                        enabled = !openingState.isAnimating,
+                        enabled = !openingState.isAnimating && (data.caseInfo.price > 0 || count == 1),
                         modifier = Modifier.weight(1f).height(36.dp),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -448,5 +457,6 @@ private fun rarityColor(rarity: String): Color = when (rarity) {
     "rare" -> Color(0xFF4B69FF)
     "epic" -> Color(0xFF8847FF)
     "legendary" -> Color(0xFFFFD700)
+    "souvenir" -> Color.White
     else -> Color.White
 }

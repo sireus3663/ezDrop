@@ -14,6 +14,7 @@ import com.ezDrop.app.data.util.wearTier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -63,11 +64,28 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         loadCases()
+        viewModelScope.launch {
+            val uid = sessionManager.getUserId() ?: return@launch
+            userDao.getByIdFlow(uid).collectLatest {
+                loadCases()
+            }
+        }
     }
 
     fun loadCases() {
         viewModelScope.launch {
-            _cases.value = caseDao.getAll()
+            val all = caseDao.getAll()
+            val userId = sessionManager.getUserId()
+            if (userId != null) {
+                val user = userDao.getById(userId)
+                if (user != null) {
+                    val invValue = inventoryDao.getInventoryValue(userId)
+                    val cheapestPrice = all.filter { it.name != "Second Chance" }.minOfOrNull { it.price } ?: Int.MAX_VALUE
+                    _cases.value = if (user.balance + invValue < cheapestPrice) all else all.filter { it.name != "Second Chance" }
+                    return@launch
+                }
+            }
+            _cases.value = all
         }
     }
 
@@ -85,33 +103,47 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
     fun startOpening(count: Int) {
         val caseId = _caseId ?: return
         viewModelScope.launch {
-            _openingState.value = CaseOpeningState(count = count, isAnimating = true)
+            val actualCount = if (detail.value?.caseInfo?.price == 0) 1 else count
+            _openingState.value = CaseOpeningState(count = actualCount, isAnimating = true)
 
             val detail = _detail.value ?: return@launch
             val userId = sessionManager.getUserId() ?: return@launch
             val user = userDao.getById(userId) ?: return@launch
 
-            val totalPrice = detail.caseInfo.price * count
+            val totalPrice = detail.caseInfo.price * actualCount
 
             if (user.level < detail.caseInfo.requiredLevel) {
                 _openingState.value = CaseOpeningState(
-                    count = count,
+                    count = actualCount,
                     error = "Need level ${detail.caseInfo.requiredLevel}, you have ${user.level}"
                 )
                 return@launch
             }
 
-            if (user.balance < totalPrice) {
-                _openingState.value = CaseOpeningState(
-                    count = count,
-                    error = "Need $totalPrice$, you have ${user.balance}$"
-                )
-                return@launch
+            if (detail.caseInfo.price > 0) {
+                if (user.balance < totalPrice) {
+                    _openingState.value = CaseOpeningState(
+                        count = actualCount,
+                        error = "Need $totalPrice$, you have ${user.balance}$"
+                    )
+                    return@launch
+                }
+                userDao.updateBalance(userId, user.balance - totalPrice)
+            } else {
+                val now = System.currentTimeMillis()
+                val lastOpen = sessionManager.getSecondChanceLastOpen(userId)
+                if (lastOpen > 0 && now - lastOpen < 3_600_000) {
+                    val remaining = (3_600_000 - (now - lastOpen)) / 1000
+                    _openingState.value = CaseOpeningState(
+                        count = actualCount,
+                        error = "Second Chance available once per hour. Try again in ${remaining / 60}:${"%02d".format(remaining % 60)}."
+                    )
+                    return@launch
+                }
+                sessionManager.saveSecondChanceLastOpen(userId, now)
             }
 
-            userDao.updateBalance(userId, user.balance - totalPrice)
-
-            val results = List(count) { rollItem(detail) }
+            val results = List(actualCount) { rollItem(detail) }
 
             for (r in results) {
                 userDao.addxp(userId, r.finalPrice)
@@ -125,8 +157,12 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
 
+            if (detail.caseInfo.price == 0) {
+                loadCases()
+            }
+
             _openingState.value = CaseOpeningState(
-                count = count,
+                count = actualCount,
                 isAnimating = true,
                 results = results,
             )
@@ -135,7 +171,7 @@ class CaseViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onAnimationEnd() {
         val current = _openingState.value
-        _openingState.value = current.copy(isAnimating = false, showResults = true)
+        _openingState.value = current.copy(showResults = true)
     }
 
     fun resetOpeningState() {

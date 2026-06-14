@@ -253,7 +253,7 @@ private fun buildScrollItems(
     val size = 30
     val list = MutableList<CaseItemWithDetails>(size) { i ->
         if (i == targetIndex) winner
-        else allItems.random(Random)
+        else allItems.random(Random) //иллюзия крутого дропа, можно заменить на нормальный
     }
     return list
 }
@@ -269,5 +269,6 @@ private fun rarityColor(rarity: String): Color = when (rarity) {
     "rare" -> Color(0xFF4B69FF)
     "epic" -> Color(0xFF8847FF)
     "legendary" -> Color(0xFFFFD700)
+    "souvenir" -> Color.White
     else -> Color.White
 }
